@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cartographie TRACC</title>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <link rel="stylesheet" href="style.css">
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
+    <script src="https://unpkg.com/@turf/turf@6.5.0/turf.min.js"></script>
+    <script src="data-SNCF/lignesrfn.geojson.js"></script>
+</head>
+
+<body>
+    <header>
+        <h1>Les infrastructures SNCF soumises aux risques climatiques</h1>
+    </header>
+
+    <!-- Rubrique réseau à gauche -->
+    <aside id="SelectionReseau">
+        <h2>Réseau</h2>
+        <!-- Checkbox du réseau national -->
+        <form>
+            <label><input type="checkbox" id="checkboxLignes" checked> Lignes du réseau national</label><br>
+            <!-- Sélection de l'infrastructure à afficher -->
+            <label for="infraSelect" style="margin-bottom: -5px;"><strong>Infrastructures à afficher
+                    :</strong></label><br>
+            <select id="infraSelect" style="width: 100%; margin-top: 5px;">
+                <option value="" name="infra"> Sélectionner </option>
+                <option value="gares" name="infra">Gares</option>
+                <option value="ouvrages" name="infra">Ouvrages en terre</option>
+                <option value="ponts_route" name="infra">Ponts-route</option>
+                <option value="passerelles" name="infra">Passerelles</option>
+            </select>
+        </form>
+<!-- Résultat des infrastructures à risque-->
+            <div id="resultatsOuvrages" style="margin-top: 15px; align-items: center;">
+                <div id="OuvragesArisqueDetecte" style="font-weight:bold">Infrastructures à risque <br>⬇ ⬇ ⬇ ⬇ ⬇ ⬇ ⬇ ⬇ ⬇ ⬇ ⬇ ⬇ ⬇<br></div>
+                <div id="nombreOuvrages" style="font-weight:bold"></div>
+                <div id="nomsOuvrages">
+                    <ul id="listeOuvrages"></ul>
+                </div>
+            </div>
+    </aside>
+
+    <!-- Carte au centre -->
+    <div id="map"></div>
+
+    <!-- Rubrique scénarios à droite -->
+    <!-- Sélection des scénarios -->
+    <aside id="SelectionScenarios">
+        <button id="clearcarte" style="width:230px; margin-bottom: 20px;">Nettoyer la carte</button>
+        <h2>Scénarios climatiques</h2>
+        <form>
+            <label class="scenario-label">
+                <input type="radio" name="scenario" value="actuel"> Référence
+                <div class="scenario-explication">Période de référence : 1976–2005</div>
+            </label>
+
+            <label class="scenario-label">
+                <input type="radio" name="scenario" value="2030"> Horizon 2030 
+                <div class="scenario-explication">Monde ➞ +1.5°C / <strong>France ➞ +2°C</strong></div>
+            </label>
+
+            <label class="scenario-label">
+                <input type="radio" name="scenario" value="2050"> Horizon 2050 
+                <div class="scenario-explication">Monde ➞ +2°C / <strong>France ➞ +2,7°C</strong></div>
+            </label>
+
+            <label class="scenario-label">
+                <input type="radio" name="scenario" value="2100"> Horizon 2100
+                <div class="scenario-explication">Monde ➞ +3°C / <strong>France ➞ +4°C</strong></div>
+            </label>
+
+        </form>
+
+
+        <!-- Sélection des indices -->
+        <h3>Indice à afficher</h3>
+        <select id="indiceSelect">
+            <option value=""> Sélectionner </option>
+            <option value="ZonesInnondables">Zones innondables</option>
+            <option value="TXm_seas_JJA">Température maximale en été (°C)</option>
+            <option value="TMm_seas_JJA">Température moyenne en été (°C)</option>
+            <option value="TX35D_yr">Jours ≥ 35°C</option>
+            <option value="TX30D_yr">Jours ≥ 30°C</option>
+            <option value="Rx1d_yr">Max pluie extrême (mm)</option>
+            <option value="RRq99_yr">Pluies extrêmes (mm)</option>
+            <option value="RRq99refD_yr">Fréquence pluie remarquable (j)</option>
+            <option value="IFM40_yr">Feux météo (j)</option>
+
+            <!-- Texte explicatif des indices-->
+        </select>
+        <div id="explicationIndice" class="texte-explicatif"
+            style="margin-top: 10px; font-size: 0.9em; font-style: italic; color: #333;">
+        </div>
+        <!-- Texte explicatif du seuil-->
+        <h3 id="labelseuil">Seuil de risque </h3><span id="explication-seuil"
+            class="texte-explicatif" style="margin-top: 0px; font-size: 0.9em; font-style: italic; color: #333;">Indiquez une valeur de seuil concernant l'indice sélectionné pour afficher les
+            infrastructures que vous définissez à risque</span>
+        <div id="seuilContainer">
+            <input type="number" id="seuilValue" value="0" style="width: 60px; margin-left: 20px;">
+            <button id="afficherBtn" style="margin-left: 30px;">Afficher</button>
+            
+    </aside>
+
+    <script>
+        //Centrer la carte sur la France
+        const carte = L.map('map').setView([47.07, 2.02], 5.5);
+        //Ajouter le fond de carte d'OpenStreetMap
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png?{foo}', {
+            foo: 'bar',
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(carte);
+
+        // Création d'un Pane et attribution d'une priorité dans la visualisation (Z=650, 450 par défaut) utilisé pour le rfn
+        carte.createPane('reseauPane');
+        carte.getPane('reseauPane').style.zIndex = 650;
+
+        // Création d'un Pane et attribution d'une priorité dans la visualisation (Z=650, 450 par défaut) utilisé pour les infrastructures à risque
+        carte.createPane('infraPane');
+        carte.getPane('infraPane').style.zIndex = 800;
+
+        // Fonction qui permet de renvoyer une couleur sur une palette allant de couleur min à couleur max, associées à une valeur min et valeur max
+        function getColor(val, min, max, colorMin, colorMax) {
+            // Convertir les couleurs hexadécimales en RGB
+            function hexToRgb(hex) {
+                hex = hex.replace('#', '');
+                if (hex.length === 3) {
+                    hex = hex.split('').map(c => c + c).join('');
+                }
+                const bigint = parseInt(hex, 16);
+                return {
+                    r: (bigint >> 16) & 255,
+                    g: (bigint >> 8) & 255,
+                    b: bigint & 255
+                };
+            }
+
+            // Convertir RGB en couleur hexadécimale
+            function rgbToHex(r, g, b) {
+                return "#" + [r, g, b].map(x => {
+                    const hex = Math.round(x).toString(16);
+                    return hex.length === 1 ? "0" + hex : hex;
+                }).join('');
+            }
+
+            // Insérer val dans [min, max]
+            const ratio = Math.max(0, Math.min(1, (val - min) / (max - min)));
+            const c1 = hexToRgb(colorMin);
+            const c2 = hexToRgb(colorMax);
+            const r = c1.r + (c2.r - c1.r) * ratio;
+            const g = c1.g + (c2.g - c1.g) * ratio;
+            const b = c1.b + (c2.b - c1.b) * ratio;
+            return rgbToHex(r, g, b);
+        }
+
+        // La position en degré des valeurs ne permet pas un rendu propre sans conversion en mètres
+        // Fonction pour approx. la distance en degrés correspondant à un côté de N mètres
+        function metersToDegreesLat(meters) {
+            return meters / 111320; // 1° lat ~ 111.32 km
+        }
+        function metersToDegreesLon(meters, latitude) {
+            return meters / (40075000 * Math.cos(latitude * Math.PI / 180) / 360); // dépend de la latitude
+        }
+        // Fonction pour créer un carré en mètres 
+        function getSquareAround(lat, lon, meters = 5000) {
+            const dLat = metersToDegreesLat(meters) / 2;
+            const dLon = metersToDegreesLon(meters, lat) / 2;
+            return [
+                [lat - dLat, lon - dLon],
+                [lat - dLat, lon + dLon],
+                [lat + dLat, lon + dLon],
+                [lat + dLat, lon - dLon],
+                [lat - dLat, lon - dLon]
+            ];
+        }
+
+        let scenarioLayerGroup = null; // Pour stocker la couche affichée
+        // Ajout d'une légende à la carte
+        const legend = L.control({ position: 'bottomright' });
+
+        legend.onAdd = function (map) {
+            this._div = L.DomUtil.create('div', 'custom-legend');
+            this.update();
+            return this._div;
+        };
+
+        legend.update = function (props) {
+            if (!props) {
+                this._div.innerHTML = '';
+                return;
+            }
+
+            const { id_indice, min, max, colorMin, colorMax } = props;
+
+            this._div.innerHTML = `
+        <div class="legend-bar-container">
+        <span>${max.toFixed(1)}</span>
+        <div class="legend-bar" style="background: linear-gradient(to bottom, ${colorMax}, ${colorMin});"></div>
+            <div class="legend-labels">
+                <span>${min.toFixed(1)}</span>
+            </div>
+        </div>
+    `;
+        };
+         legend.addTo(carte);
+
+        // Fonction d'association d'un palette de couleur pour chaque indices
+        function getColorPaletteForIndice(indice) {
+            const palettes = {
+                // Chaleur : vert - rouge
+                "TXm_seas_JJA": ["#00ff00", "#ff0000"],
+                "TMm_seas_JJA": ["#00ff00", "#ff0000"],
+                "TX35D_yr": ["#00ff00", "#ff0000"],
+                "TX30D_yr": ["#00ff00", "#ff0000"],
+
+                // Pluie : bleu clair - bleu foncé
+                "RRq99refD_yr": ["#e0f7fa", "#01579b"],
+                "RRq99_yr": ["#e0f7fa", "#01579b"],
+                "Rx1d_yr": ["#e0f7fa", "#01579b"],
+
+                // Feu : jaune - rouge
+                "IFM40_yr": ["#ffff00", "#ff0000"],
+
+                // Inondation : GRIS
+                "ZonesInnondables": ["#413d46", "#413d46"]
+            };
+
+            return palettes[indice] || legend.update(); // par défaut on supprime la légende si l'indice n'est pas supporté (si c'est l'indice 'selectionner') 
+        }
+
+        // On associe un min et un max global pour chaque indice tout scénario confondu pour la cohérence visuelle
+        function getMinMaxIndice(indice) {
+            const bornes = {
+                "TXm_seas_JJA": [5.62, 34.14],
+                "TMm_seas_JJA": [3.85, 27.57],
+                "TX35D_yr": [0, 40.7],
+                "TX30D_yr": [0, 101.1],
+                "Rx1d_yr": [25.61, 200.27],
+                "RRq99_yr": [15.72, 112.57],
+                "RRq99refD_yr": [2.2, 8.6],
+                "IFM40_yr": [0, 82],
+            };
+
+            return bornes[indice] || [0, 1]; // Valeurs par défaut si indice inconnu
+        }
+
+        // Cette fonction affiche l'explication liée à l'indice 
+        function afficherExplicationIndice(indice) {
+            const explications = {
+                "": "Veuilez sélectionner un scénario climatique",
+                "ZonesInnondables": "Territoires à Risque d'Inondations, les TRI ne sont pas liés aux scénarios, source georisques.gouv",
+                "TXm_seas_JJA": "Moyenne des températures maximales quotidiennes de la période été",
+                "TMm_seas_JJA": "Moyenne des températures moyennes quotidiennes de la période été",
+                "TX35D_yr": "Nombre de jours dans l'année où la température maximale dépasse 35°C.",
+                "TX30D_yr": "Nombre de jours dans l'année où la température maximale dépasse 30°C.",
+                "Rx1d_yr": "Intensité des précipitations extrêmes (max annuel des précipitations totales quotidiennes (mm)",
+                "RRq99_yr": "Cumul de précipitations remarquables (percentile 99 du cumul  quotidien) (mm)",
+                "RRq99refD_yr": "Nombre de jours où les précipitations quotidiennes dépassent le 99e centile des précipitations quotidiennes de l'année.",
+                "IFM40_yr": "Nombre de jours où l'indicateur feux météo est supérieur à 40 (favorable à des départs de feu)"
+            };
+            const texte = explications[indice] || "";
+            document.getElementById("explicationIndice").textContent = texte;
+        }
+
+
+        // Fonction afficherScenario d'affichage d'un scénario donné
+        function afficherScenario(fichierGeojson, annee, id_indice) {
+            // Supprimer la couche précédente si elle existe
+            if (scenarioLayerGroup) {
+                carte.removeLayer(scenarioLayerGroup);
+            }
+            const [couleur_min, couleur_max] = getColorPaletteForIndice(id_indice);
+            fetch(fichierGeojson)
+                .then(response => response.json())
+                .then(data => {
+                    // const features = data.features.filter(f => f.properties.Annee === annee);
+                    const features = data.features.filter(f => f.properties[id_indice] !== undefined);
+                    // Calcul dynamique des valeurs min et max
+                    let minVal = Infinity;
+                    let maxVal = -Infinity;
+
+                    features.forEach(f => {
+                        const val = f.properties[id_indice];
+                        if (val !== undefined && !isNaN(val)) {
+                            minVal = Math.min(minVal, val);
+                            maxVal = Math.max(maxVal, val);
+                        }
+                    });
+                    const [min2Val, max2Val] = getMinMaxIndice(id_indice);
+
+                    // Affichage console
+                    console.log(`Indice : ${id_indice}`);
+                    console.log(`→ Valeur min : ${minVal}`);
+                    console.log(`→ Valeur max : ${maxVal}`);
+
+                    const newLayer = L.layerGroup();
+
+                    features.forEach(f => {
+                        const lat = f.geometry.coordinates[1];
+                        const lon = f.geometry.coordinates[0];
+                        const val = f.properties[id_indice];
+                        const squareCoords = getSquareAround(lat, lon, 8000);
+                        const color = getColor(val, min2Val, max2Val, couleur_min, couleur_max);
+
+                        const poly = L.polygon(squareCoords, {
+                            color: color,
+                            fillColor: color,
+                            fillOpacity: 0.60,
+                            weight: 0
+                        });
+                        poly.addTo(newLayer);
+                    });
+
+                    // Mise à jour de la légende
+                    legend.update({
+                        id_indice: id_indice,
+                        min: min2Val,
+                        max: max2Val,
+                        colorMin: couleur_min,
+                        colorMax: couleur_max
+                    });
+                    // On supprime la légende si l'indice est les TRI
+                    if (id_indice == "ZonesInnondables") {
+                        legend.update()
+                    }
+
+                    newLayer.addTo(carte);
+                    scenarioLayerGroup = newLayer;
+                })
+                .catch(err => {
+                    console.error("Erreur lors du chargement du fichier :", err);
+                });
+        }
+
+        //Ajout du réseau ferré national Rfn
+        let LignesRfnStyle = {
+            "color": "black",
+            "weight": 1.2,
+            "opacity": 1
+        }
+        let LignesRfn = L.geoJSON(lignesrfnJSON, {
+            style: LignesRfnStyle,
+            pane: 'reseauPane'
+        }).addTo(carte)
+
+        // Activer/Desactiver le réseau ferré national
+        // Ciblage de la checkbox
+        const lignesCheckbox = document.getElementById('checkboxLignes');
+        // Activation/désactivation de la couche
+        lignesCheckbox.addEventListener('change', (e) => {
+            if (e.target.checked) {
+                carte.addLayer(LignesRfn);
+            } else {
+                carte.removeLayer(LignesRfn);
+            }
+        });
+
+        // Cette fonction zoneARisque stocke les points à risque concernant un indice, d'une année, d'un fichier geojson, au dessus d'un seuil précisé
+        async function zoneARisque(fichierGeojson, annee, indice, seuil) {
+            try {
+                const response = await fetch(fichierGeojson);
+                const data = await response.json();
+
+                // Filtrer les points correspondant à l'année et au seuil
+                const featuresFiltrees = data.features.filter(feature =>
+                    feature.properties &&
+                    feature.properties[indice] !== undefined &&
+                    feature.properties[indice] >= seuil
+                );
+
+                return featuresFiltrees;
+
+            } catch (error) {
+                console.error(`Erreur lors du chargement ou du filtrage de ${fichierGeojson} :`, error);
+                return [];
+            }
+        }
+
+        // Affiche les infrastructures 
+        let infraLayer = null; // Couche des infrastructures
+
+        function afficherInfrastructure(fichier) {
+            fetch(fichier)
+                .then(res => res.json())
+                .then(data => {
+                    // Supprime l'ancienne couche si elle existe
+                    if (infraLayer) {
+                        carte.removeLayer(infraLayer);
+                        infraLayer = null;
+                    }
+
+                    // Crée la nouvelle couche
+                    infraLayer = L.geoJSON(data, {
+                        pane: 'infraPane',
+                        pointToLayer: function (feature, latlng) {
+                            return L.circleMarker(latlng, {
+                                radius: 5,
+                                fillColor: "#3388ff",
+                                color: "#0055aa",
+                                weight: 1,
+                                opacity: 1,
+                                fillOpacity: 0.6
+                            });
+                        },
+                        onEachFeature: function (feature, layer) {
+                            const libelle = feature.properties.libelle || "Infrastructure";
+                            layer.bindPopup(`<strong>${libelle}</strong>`);
+                        }
+                    }).addTo(carte);
+                });
+        }
+
+        // Affiche les Territoires à risque d'inondation
+        let inondLayer = null; // Couche des inondations
+
+        function afficherInondation(fichier) {
+            fetch(fichier)
+                .then(res => res.json())
+                .then(data => {
+                    // Supprime l'ancienne couche si elle existe
+                    if (inondLayer) {
+                        carte.removeLayer(inondLayer);
+                        inondLayer = null;
+                    }
+
+                    // Crée la nouvelle couche
+                    inondLayer = L.geoJSON(data, {
+                        pane: 'infraPane',
+                        style: {
+                            fillColor: "#c3b4d3",
+                            color: "#5e5568",
+                            weight: 2,
+                            opacity: 1,
+                            fillOpacity: 0.6
+                        }
+                    }).addTo(carte);
+                });
+        }
+
+        // Infrastructures
+        let InfraLayer = null; // Variable pour stocker la couche
+
+        // Cette fonction charge les infrastructures et affiche uniquement celles présentes dans un rayon de 4km d'une zone à risque définie par un indice et un seuil
+        async function chargerInfraARisque(geojsonInfra, fichierScenar, annee, indice, seuil) {
+            // Rayon maximal
+            const rayon = 4000;
+
+            // Fonction de calcul de distance (Haversine)
+            function haversineDistance(lat1, lon1, lat2, lon2) {
+                const R = 6371000; // rayon de la Terre en m
+                const dLat = (lat2 - lat1) * Math.PI / 180;
+                const dLon = (lon2 - lon1) * Math.PI / 180;
+                const a = Math.sin(dLat / 2) ** 2 +
+                    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                    Math.sin(dLon / 2) ** 2;
+                return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            }
+
+            try {
+                const zones = await zoneARisque(fichierScenar, annee, indice, seuil);
+                const res = await fetch(geojsonInfra);
+                const dataInfra = await res.json();
+
+                // Filtrage des infrastructures
+                const infraARisque = dataInfra.features.filter(feature => {
+                    const pt = feature.properties.geo_point_2d;
+                    return zones.some(z => {
+                        const [zLon, zLat] = z.geometry.coordinates;
+                        return haversineDistance(pt.lat, pt.lon, zLat, zLon) < rayon;
+                    });
+                });
+
+                const couche = {
+                    ...dataInfra,
+                    features: infraARisque
+                };
+
+                if (InfraLayer) {
+                    carte.removeLayer(InfraLayer);
+                    InfraLayer = null;
+                }
+
+                InfraLayer = L.geoJSON(couche, {
+                    pane: 'infraPane',
+                    style: function (feature) {
+                        return {
+                            color: "#ff0000", // rouge
+                            weight: 5, // Épaisseur de la ligne
+                            opacity: 1
+                        };
+                    },
+                    onEachFeature: function (feature, layer) { // Affiche une fenêtre popup pour donner les informations sur la structure 
+                        if (feature.properties) {
+                            const nom = feature.properties.nom || "Infrastructure";
+                            const type = feature.properties.type || "Type inconnu";
+                            const libelle = feature.properties.libelle || "Libelle inconnu";
+                            layer.bindPopup(`<strong>${nom}</strong><br>Type : ${type}<br>Nom : ${libelle}`);
+                        }
+
+                    }
+                }).addTo(carte);
+                const libellesUniques = new Set(infraARisque.map(f => f.properties.libelle)); // constitue une liste unique des noms des ouvrages à risque (supprime les doublons)
+                console.log("Noms des ouvrages à risque (uniques) :", libellesUniques);
+                console.log("Zones d'ouvrages à risque (uniques) :", zones);
+                const select = document.getElementById("infraSelect");
+                const infra_nom = select.options[select.selectedIndex].text;// récupère le contenu et non la value 
+                document.getElementById("nombreOuvrages").textContent = libellesUniques.size +' '+ infra_nom +' à risque'; // c'est pas le nombre de zones qu'il faut c'est le nombre d'ouvrages
+                // Met à jour la liste
+                const listeElem = document.getElementById("listeOuvrages");
+                listeElem.innerHTML = ""; // Vide la liste actuelle
+
+                libellesUniques.forEach(lib => {
+                    const li = document.createElement("li");
+                    li.textContent = lib;
+                    listeElem.appendChild(li);
+                });
+
+
+            } catch (err) {
+                console.error("Erreur dans chargerInfraRisque :", err);
+            }
+        }
+
+        // Récupère l'infrastructure selectionnée, renvoie le fichier
+        function getSelectedInfraInfo() {
+            const value = document.getElementById("infraSelect").value;
+            switch (value) {
+                case 'gares':
+                    return { fichier: 'data-SNCF/liste-des-gares.geojson' };
+                case 'ouvrages':
+                    return { fichier: 'data-SNCF/liste-ouvrages-en-terre.geojson' };
+                case 'ponts_route':
+                    return { fichier: 'data-SNCF/liste-des-ponts-route.geojson' };
+                case 'passerelles':
+                    return { fichier: 'data-SNCF/liste-des-passerelles.geojson' };
+                default:
+                    return null;
+            }
+        }
+
+        // Récupère le scénario selectionné, renvoie le fichier et l'année d'intérêt
+        function getSelectedScenarioInfo() {
+            const scenario = document.querySelector('input[name="scenario"]:checked');
+            if (!scenario) return null;
+
+            const value = scenario.value;
+            switch (value) {
+                case 'actuel':
+                    return { fichier: 'data-METEO/indicesDRIAS2023moyenne.geojson', annee: 2005 };
+                case '2030':
+                    return { fichier: 'data-METEO/indicesDRIAS2030moyenne.geojson', annee: 2037 };
+                case '2050':
+                    return { fichier: 'data-METEO/indicesDRIAS2050moyenne.geojson', annee: 2053 };
+                case '2100':
+                    return { fichier: 'data-METEO/indicesDRIAS2100moyenne.geojson', annee: 2098 };
+                default:
+                    return null;
+            }
+        }
+
+        // Sélection des TRI
+        document.getElementById("indiceSelect").addEventListener("change", () => {
+            const indice = document.getElementById("indiceSelect").value;
+            afficherExplicationIndice(indice); // Affiche l’explication
+            if (indice == "ZonesInnondables") {
+                afficherInondation("n_tri_s.geojson")
+                document.getElementById("explication-seuil").textContent = "Les territoires à risque d'inondation ne nécessitent pas de seuil, sélectionnez une infrastructure puis cliquez Afficher pour voir les infrastructures à risque";
+                const infra_info = getSelectedInfraInfo(); // Récupère infrastructure
+                const scenario_info = getSelectedScenarioInfo();
+                chargerInfraARisque(infra_info.fichier, scenario_info.fichier, scenario_info.annee, indice, 0)
+            }
+        });
+
+
+        // Affiche l'indice en fonction du scénario selectionné
+        document.querySelectorAll('input[name="scenario"]').forEach(radio => {
+            radio.addEventListener('change', function () {
+                const info = getSelectedScenarioInfo();
+                const selectedIndice = document.getElementById("indiceSelect").value;
+                if (info) {
+                    afficherScenario(info.fichier, info.annee, selectedIndice);
+                }
+            });
+        });
+
+        // Affiche le scénario en fonction de l'indice sélectionné, (affiche le détail/explication de l'indice)
+        document.getElementById("indiceSelect").addEventListener("change", () => {
+            const indice = document.getElementById("indiceSelect").value;
+            afficherExplicationIndice(indice); // Affiche l’explication
+            const info = getSelectedScenarioInfo();
+            if (inondLayer) carte.removeLayer(inondLayer);
+            if (!info) return;
+            afficherScenario(info.fichier, info.annee, indice);
+
+        });
+
+        // Affiche les infrastructures sélectionnées depuis la rubrique Réseau
+        document.getElementById("infraSelect").addEventListener("change", () => {
+            const infra = document.getElementById("infraSelect").value;
+            const info = getSelectedInfraInfo();
+            if (infra == "") { // A la non selection d'indice (click sur "Séléctionner")
+                // Supprime l'ancienne couche si elle existe
+                if (infraLayer) {
+                    carte.removeLayer(infraLayer);
+                    infraLayer = null;
+                }
+            }
+            if (!info) return;
+            // Supprime les infrastructures seuillées au changement de sélection d'une infrastructure
+            if (InfraLayer) {
+                carte.removeLayer(InfraLayer);
+                InfraLayer = null;
+            }
+            afficherInfrastructure(info.fichier)
+        });
+
+        // Gère le bouton "Afficher" de l'affichage des ouvrages seuillés
+        document.getElementById("afficherBtn").addEventListener("click", async () => {
+            const scenario_info = getSelectedScenarioInfo(); // Récupère scénario + année
+            const infra_info = getSelectedInfraInfo(); // Récupère infrastructure
+            const select = document.getElementById("infraSelect");
+            const infra_nom = select.options[select.selectedIndex].text;// récupère le contenu et non la value 
+            const indice = document.getElementById("indiceSelect").value; // Recupère l'indice
+            const seuil = parseFloat(document.getElementById("seuilValue").value);
+
+            if (!scenario_info || !infra_info || isNaN - (seuil)) {
+                alert("Veuillez sélectionner un scénario, un type d'infrastructure et entrer un seuil valide.");
+                return;
+            }
+
+            // Supprime l'ancienne couche si elle existe
+            if (infraLayer) {
+                carte.removeLayer(infraLayer);
+                infraLayer = null;
+            }
+            // Met à jour le texte des ouvrages à risque 
+            // document.getElementById("OuvragesArisqueDetecte").textContent = infra_nom + " à risque detecté(e)s :";
+            // Appelle ta fonction de filtrage/affichage
+            await chargerInfraARisque(infra_info.fichier, scenario_info.fichier, scenario_info.annee, indice, seuil);
+        });
+
+        // Gère le bouton nettoyer carte
+        function nettoyerCarte() {
+            carte.eachLayer(function (layer) {
+                // Ne  supprime pas le fond de carte
+                if (layer instanceof L.TileLayer) return;
+                // Supprime toute autre couche
+                carte.removeLayer(layer);
+            });
+
+            // Réinitialise l'affichage
+            legend.update();
+            document.getElementById("nombreOuvrages").textContent = '';
+            document.getElementById("listeOuvrages").innerHTML = "";
+            document.querySelectorAll('#SelectionReseau input[type="checkbox"]').forEach(cb => cb.checked = false);
+            document.querySelectorAll('#SelectionScenarios input[type="radio"]').forEach(cb => cb.checked = false);
+            document.getElementById("infraSelect").selectedIndex = 0;
+            document.getElementById("indiceSelect").selectedIndex = 0;
+        }
+        document.getElementById("clearcarte").addEventListener("click", nettoyerCarte);
+
+
+
+    </script>
+
+</body>
+
+</html>

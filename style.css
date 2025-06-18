@@ -1,0 +1,227 @@
+/* === GLOBAL === */
+
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f5f5f5;
+}
+
+#map {
+    height: 100%;
+    width: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 0;
+}
+
+/* === HEADER FIXÉ === */
+
+header {
+    position: absolute;
+    top: 10px;
+    left: 44%;
+    transform: translateX(-45%);
+    background: rgba(17, 75, 95, 0.9);
+    padding: 5px 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    color: #fff;
+    z-index: 999;
+}
+
+header h1 {
+    margin: 0;
+    font-size: 1.5rem;
+
+}
+
+/* === PANNEAU GAUCHE === */
+
+#SelectionReseau {
+    position: absolute;
+    top: 75px;
+    left: 20px;
+    width: 230px;
+    background: rgba(255,255,255,0.95);
+    border-radius: 12px;
+    padding: 15px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    z-index: 998;
+}
+
+#SelectionReseau h2 {
+    margin-top: 0;
+}
+
+
+/* === PANNEAU DROIT === */
+
+#SelectionScenarios {
+    position: absolute;
+    top: 10px;
+    right: 20px;
+    width: 270px;
+    background: rgba(255,255,255,0.95);
+    border-radius: 12px;
+    padding: 10px;
+        padding-bottom: 0px;
+
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    z-index: 998;
+}
+
+#SelectionScenarios h2, #SelectionScenarios h3 {
+    margin-top: 20px;
+    margin-bottom: 5px;
+
+}
+/* === LÉGENDE === */
+
+.custom-legend {
+    position: absolute;
+    bottom: 100px;
+    right: 320px;
+    background: rgba(255,255,255,0.8);
+    padding: 10px 10px;
+    border-radius: 0px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    font-size: 0.9rem;
+    color: #333;
+    z-index: 999;
+    height: 70vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.legend-bar-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100%;
+}
+
+.legend-bar {
+    flex: 1;
+    width: 15px;
+    margin: 10px 0;
+    border-radius: 5px;
+}
+
+.legend-labels {
+    font-weight: bold;
+    font-size: 0.9rem;
+}
+
+
+/* === BOUTON NETTOYER CENTRÉ === */
+
+#clearcarte {
+    display: block;
+    margin: 5px auto;
+    padding: 12px 20px;
+    font-size: 1rem;
+    border-radius: 10px;
+    border: none;
+    background-color: #F0F0F0;
+    color: #000000;
+    cursor: pointer;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+}
+
+#clearcarte:hover {
+    opacity: 0.85;
+}
+
+/* === BOUTONS RADIO / CHECKBOX STYLE === */
+
+input[type="checkbox"], input[type="radio"] {
+    accent-color: #0077b6;
+    transform: scale(1.2);
+    margin-right: 8px;
+}
+
+label {
+    display: block;
+    align-items: flex-start;
+    margin-bottom: 12px;
+    font-weight: 500;
+    font-size: 1rem;
+    flex-direction: column;
+}
+
+.scenario-explication {
+    font-size: 0.8rem;
+    color: #666;
+    margin-left: 28px;
+    margin-top: 3px;
+}
+
+/* === SELECT STYLE === */
+
+select {
+    width: 100%;
+    padding: 10px;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    margin-top: 0px;
+}
+
+/* === CHAMP SEUIL ET LISTE INFRA === */
+
+#seuilContainer {
+    margin-top: 10px;
+}
+
+#resultatsOuvrages {
+    margin-top: 20px;
+    padding-top: 10px;
+    border-top: 1px solid #ccc;
+}
+
+#listeOuvrages {
+    list-style-type: none;
+    padding: 0;
+    max-height: 150px;
+    overflow-y: auto;
+    margin-top: 8px;
+}
+
+#listeOuvrages li {
+    padding: 4px 0;
+    font-size: 0.9rem;
+}
+
+
+/* === BOUTONS === */
+
+button {
+    padding: 12px 20px;
+    margin: 8px 0;
+    font-size: 1rem;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+    transition: all 0.3s ease;
+}
+
+button:hover {
+    opacity: 0.85;
+}
+
+/* === SCROLL PANELS === */
+aside::-webkit-scrollbar {
+    width: 8px;
+}
+aside::-webkit-scrollbar-thumb {
+    background-color: #ccc;
+    border-radius: 10px;
+}
+aside::-webkit-scrollbar-track {
+    background: #f0f0f0;
+}
