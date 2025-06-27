@@ -82,39 +82,104 @@ header h1 {
 
 .custom-legend {
     position: absolute;
-    bottom: 100px;
-    right: 320px;
-    background: rgba(255,255,255,0.8);
-    padding: 10px 10px;
-    border-radius: 0px;
+    bottom: 20px;
+    right: 310px;
+    background: rgba(255,255,255,0.9);
+    padding: 15px;
+    border-radius: 10px;
     box-shadow: 0 4px 10px rgba(0,0,0,0.3);
     font-size: 0.9rem;
     color: #333;
     z-index: 999;
-    height: 70vh;
+    width: 60px;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
+    align-items: center;
 }
 
 .legend-bar-container {
     display: flex;
     flex-direction: column;
     align-items: center;
-    height: 100%;
+    height: 70vh;
+    justify-content: space-between;
+    position: relative;
+    width: 25px;
 }
 
 .legend-bar {
-    flex: 1;
+    height: 100%;
     width: 15px;
-    margin: 10px 0;
     border-radius: 5px;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    background: linear-gradient(to bottom, #ff0000, #00ff00); /* Le dégradé est défini dynamiquement dans le JS */
 }
 
-.legend-labels {
-    font-weight: bold;
-    font-size: 0.9rem;
+#seuilSlider {
+    writing-mode: bt-lr;
+    -webkit-appearance: slider-vertical;
+    appearance: slider-vertical;
+    width: 100%;
+    height: 100%;
+    background: transparent;
+    cursor: pointer;
+    position: absolute;
+    top: 0;
+    left: 0;
+    margin: 0;
 }
+
+/* Suppression du fond par défaut sur toutes les plateformes */
+#seuilSlider::-webkit-slider-runnable-track {
+    background: transparent;
+}
+#seuilSlider::-moz-range-track {
+    background: transparent;
+}
+#seuilSlider::-ms-track {
+    background: transparent;
+    border-color: transparent;
+    color: transparent;
+}
+
+/* Style du thumb (le petit rond) */
+#seuilSlider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    height: 12px;
+    width: 12px;
+    background: #333;
+    border-radius: 50%;
+    border: 2px solid white;
+    margin-top: -6px;
+}
+#seuilSlider::-moz-range-thumb {
+    height: 12px;
+    width: 12px;
+    background: #333;
+    border-radius: 50%;
+    border: 2px solid white;
+}
+#seuilSlider::-ms-thumb {
+    height: 12px;
+    width: 12px;
+    background: #333;
+    border-radius: 50%;
+    border: 2px solid white;
+}
+
+.legend-max, .legend-min {
+    font-size: 0.85em;
+    font-weight: bold;
+}
+
+.valeur-seuil {
+    margin-top: 10px;
+    font-size: 0.85em;
+    text-align: center;
+}
+
 
 
 /* === BOUTON NETTOYER CENTRÉ === */
