@@ -17,7 +17,62 @@ html, body {
     z-index: 0;
 }
 
+/* === Fenêtre d'intro === */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+}
+
+.modal-content {
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    max-width: 500px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    font-size: 1rem;
+}
+
+.modal-content h2 {
+    text-align: center;
+    margin-top: 0;
+    margin-bottom: 15px;
+}
+
+.modal-content button {
+    margin-top: 20px;
+    padding: 10px 20px;
+    background-color: rgba(17, 75, 95, 0.9);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.modal-content button:hover {
+    background-color: rgba(17, 75, 95, 0.9);
+}
+
+/* === BOUTON INFO sur le header=== */
+#infoBtn {
+    cursor: pointer;
+    margin-left: 8px;
+    font-size: 1.3rem;
+    }
+
+#infoBtn:hover {
+    color: #0077b6;
+}
+
 /* === HEADER FIXÉ === */
+
 
 header {
     position: absolute;
@@ -84,89 +139,80 @@ header h1 {
     position: absolute;
     bottom: 20px;
     right: 310px;
-    background: rgba(255,255,255,0.9);
-    padding: 15px;
+    background: rgba(255, 255, 255, 0.95);
+    padding: 10px 15px;
     border-radius: 10px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
     font-size: 0.9rem;
     color: #333;
     z-index: 999;
-    width: 60px;
+    height: 70vh;
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: space-between;
 }
 
 .legend-bar-container {
+    position: relative;
+    height: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
-    height: 70vh;
     justify-content: space-between;
-    position: relative;
-    width: 25px;
 }
 
 .legend-bar {
-    height: 100%;
-    width: 15px;
-    border-radius: 5px;
     position: relative;
-    display: flex;
-    justify-content: center;
-    background: linear-gradient(to bottom, #ff0000, #00ff00); /* Le dégradé est défini dynamiquement dans le JS */
+    width: 20px;
+    height: 100%;
+    background: linear-gradient(to bottom, var(--colorMax), var(--colorMin));
+    border-radius: 5px;
+    margin: 5px 0;
 }
 
 #seuilSlider {
-    writing-mode: bt-lr;
-    -webkit-appearance: slider-vertical;
-    appearance: slider-vertical;
-    width: 100%;
-    height: 100%;
-    background: transparent;
-    cursor: pointer;
     position: absolute;
-    top: 0;
-    left: 0;
-    margin: 0;
+    left: 50%;
+    transform: translateX(-50%) rotate(180deg);
+    height: 63vh; /* même hauteur que la légende */
+    width: 20px;
+    -webkit-appearance: none;
+    appearance: none;
+    background: transparent; /* rend la piste transparente */
+    writing-mode: vertical-rl; /* orientation verticale */
+    z-index: 2;
+    cursor: pointer;
 }
 
-/* Suppression du fond par défaut sur toutes les plateformes */
-#seuilSlider::-webkit-slider-runnable-track {
-    background: transparent;
-}
-#seuilSlider::-moz-range-track {
-    background: transparent;
-}
-#seuilSlider::-ms-track {
-    background: transparent;
-    border-color: transparent;
-    color: transparent;
-}
-
-/* Style du thumb (le petit rond) */
 #seuilSlider::-webkit-slider-thumb {
     -webkit-appearance: none;
-    height: 12px;
-    width: 12px;
-    background: #333;
-    border-radius: 50%;
-    border: 2px solid white;
-    margin-top: -6px;
+    appearance: none;
+    width: 22px;          /* largeur du rectangle */
+    height: 15px ;         /* hauteur du rectangle */
+    background: rgba(115, 112, 112, 0.573);    /* couleur blanche */
+    border-radius: 5px;   /* coins arrondis */
+    border: 3px solid rgb(105, 105, 105);
+    cursor: pointer;
 }
+
 #seuilSlider::-moz-range-thumb {
-    height: 12px;
-    width: 12px;
-    background: #333;
-    border-radius: 50%;
-    border: 2px solid white;
+    width: 20px;
+    height: 10px;
+    background: white;
+    border-radius: 5px;
+    border: 1px solid black;
+    cursor: pointer;
+    transform: rotate(90deg);
 }
-#seuilSlider::-ms-thumb {
-    height: 12px;
-    width: 12px;
-    background: #333;
-    border-radius: 50%;
-    border: 2px solid white;
+
+
+#seuilSlider::-webkit-slider-runnable-track {
+    background: transparent; /* rend la piste transparente */
+}
+
+#seuilSlider::-moz-range-track {
+    background: transparent;
 }
 
 .legend-max, .legend-min {
@@ -175,10 +221,14 @@ header h1 {
 }
 
 .valeur-seuil {
-    margin-top: 10px;
-    font-size: 0.85em;
-    text-align: center;
+    height: 0;
+    overflow: hidden;
+    font-size: 0;
+    margin: 0;
+    padding: 0;
+    visibility: hidden; /* cache sans supprimer */
 }
+
 
 
 

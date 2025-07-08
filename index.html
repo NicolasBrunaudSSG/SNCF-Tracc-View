@@ -19,7 +19,11 @@
 
 <body>
     <header>
-        <h1>Les infrastructures SNCF soumises aux risques climatiques</h1>
+        <h1>SNCF TRACC View
+            <span id="infoBtn" title="Informations">
+                ℹ️
+            </span>
+        </h1>
     </header>
 
     <!-- Rubrique réseau à gauche -->
@@ -103,13 +107,35 @@
         <!-- Texte explicatif du seuil-->
         <h3 id="labelseuil">Seuil de risque </h3><span id="explication-seuil" class="texte-explicatif"
             style="margin-top: 0px; font-size: 0.9em; font-style: italic; color: #333;">Indiquez une valeur de seuil
-            concernant l'indice sélectionné pour afficher les
-            infrastructures que vous définissez à risque</span>
+            concernant l'indice sélectionné pour afficher les infrastructures que vous définissez à risque</span>
         <div id="seuilContainer">
             <input type="number" id="seuilValue" value="0" style="width: 60px; margin-left: 20px;">
             <button id="afficherBtn" style="margin-left: 30px;">Afficher</button>
 
     </aside>
+
+    <div id="modalIntro" class="modal">
+        <div class="modal-content">
+            <h2>Bienvenue sur SNCF TRACC View</h2>
+            <p>
+                SNCF TRACC View est un outil pédagogique et décisionnel permettant de visualiser et d'anticiper les
+                impacts du changement climatique sur les infrastructures ferroviaires. <br>
+                <br><em>(TRACC : trajectoire de réchauffement de référence pour l'adaptation au changement climatique)</em>
+            </p>
+            <p>
+                Cette application interactive vous permet :
+            <ul>
+                <li>D'explorer les risques climatiques selon différents <strong>scénarios TRACC</strong>.</li>
+                <li>De visualiser plusieurs <strong>indices d'aléas climatiques</strong>.</li>
+                <li>De cibler différents <strong>types d'infrastructures</strong>.</li>
+                <li>De définir un <strong>seuil de risque personnalisé</strong>.</li>
+            </ul>
+            </p>
+            <p><em>Sources : DRIAS-climat, DRIAS-eau, SNCF Open Data, GeoRisque.gouv</em></p>
+            <button id="closeModalBtn">Accéder à l'application</button>
+        </div>
+    </div>
+
 
     <script>
         //Centrer la carte sur la France
@@ -205,16 +231,26 @@
 
             const { id_indice, min, max, colorMin, colorMax } = props;
 
+            // Sauvegarder la valeur actuelle si slider déjà présent
+            const existingSlider = document.getElementById("seuilSlider");
+            let currentValue = min;
+            if (existingSlider) {
+                currentValue = existingSlider.value;
+                // Optionnel : vérifie que la valeur est toujours dans la plage min/max
+                if (currentValue < min) currentValue = min;
+                if (currentValue > max) currentValue = max;
+            }
+
             this._div.innerHTML = `
         <div class="legend-bar-container">
             <span class="legend-max">${max.toFixed(1)}</span>
             <div class="legend-bar">
-                <input type="range" id="seuilSlider" min="${min}" max="${max}" step="0.1" value="${min}" orient="vertical">
+                <input type="range" id="seuilSlider" min="${min}" max="${max}" step="0.1" value="${currentValue}" orient="vertical">
             </div>
             <span class="legend-min">${min.toFixed(1)}</span>
         </div>
         <div class="valeur-seuil">
-            <span id="valeurSlider">${min.toFixed(1)}</span>
+            <span id="valeurSlider">${currentValue}</span>
         </div>
     `;
 
@@ -247,17 +283,16 @@
             });
         };
 
-
         legend.addTo(carte);
 
         // Fonction d'association d'un palette de couleur pour chaque indices
         function getColorPaletteForIndice(indice) {
             const palettes = {
                 // Chaleur : vert - rouge
-                "TXm_seas_JJA": ["#00ff00", "#ff0000"],
-                "TMm_seas_JJA": ["#00ff00", "#ff0000"],
-                "TX35D_yr": ["#00ff00", "#ff0000"],
-                "TX30D_yr": ["#00ff00", "#ff0000"],
+                "TXm_seas_JJA": ["#9bca68", "#d8433c"],
+                "TMm_seas_JJA": ["#9bca68", "#d8433c"],
+                "TX35D_yr": ["#9bca68", "#d8433c"],
+                "TX30D_yr": ["#9bca68", "#d8433c"],
 
                 // Pluie : bleu clair - bleu foncé
                 "RRq99refD_yr": ["#e0f7fa", "#01579b"],
@@ -265,7 +300,7 @@
                 "Rx1d_yr": ["#e0f7fa", "#01579b"],
 
                 // Feu : jaune - rouge
-                "IFM40_yr": ["#ffff00", "#ff0000"],
+                "IFM40_yr": ["#f3eb6d", "#ff0000"],
 
                 // Inondation : GRIS
                 "ZonesInnondables": ["#413d46", "#413d46"]
@@ -292,6 +327,7 @@
 
         // Cette fonction affiche l'explication liée à l'indice 
         function afficherExplicationIndice(indice) {
+            document.getElementById("explicationIndice").style.color = "#333"; // réinitialise la couleur du texte
             const explications = {
                 "": "Veuilez sélectionner un scénario climatique",
                 "ZonesInnondables": "Territoires à Risque d'Inondations, les TRI ne sont pas liés aux scénarios, source georisques.gouv",
@@ -401,7 +437,6 @@
             }
         });
 
-
         // Affiche les infrastructures 
         let infraLayer = null; // Couche des infrastructures
 
@@ -443,6 +478,7 @@
 
 
         function afficherInfrastructure(fichier) {
+            if (fichier == null) return;
             fetch(fichier)
                 .then(res => res.json())
                 .then(data => {
@@ -516,9 +552,6 @@
             }
         }
 
-        // Infrastructures
-        let InfraLayer = null; // Variable pour stocker la couche
-
         // Cette fonction charge les infrastructures et affiche uniquement celles présentes dans un rayon de 4km d'une zone à risque définie par un indice et un seuil
         // Traite les zones innondables à part, en vérifiant l'intersection avec les zones
         async function chargerInfraARisque(geojsonInfra, fichierScenar, annee, indice, seuil) {
@@ -550,7 +583,7 @@
 
                 let infraARisque = [];
 
-                if (indice === "ZonesInnondables") {
+                if (indice === "ZonesInnondables") {   // ATTENTION AU TEMPS DE CALCUL 
                     // Cas spécial : vérifier intersection avec les zones
                     infraARisque = dataInfra.features.filter(feature => {
                         if (!feature.geometry) return false;
@@ -571,12 +604,12 @@
                     features: infraARisque
                 };
 
-                if (InfraLayer) {
-                    carte.removeLayer(InfraLayer);
-                    InfraLayer = null;
+                if (infraLayer) {
+                    carte.removeLayer(infraLayer);
+                    infraLayer = null;
                 }
 
-                InfraLayer = L.geoJSON(couche, {
+                infraLayer = L.geoJSON(couche, {
                     pane: 'infraPane',
                     // dans le cas ou c'est un linestring ou multilinestring
                     style: function (feature) {
@@ -650,23 +683,10 @@
             }
         }
 
-        // // Sélection des TRI
-        // document.getElementById("indiceSelect").addEventListener("change", () => {
-        //     const indice = document.getElementById("indiceSelect").value;
-        //     afficherExplicationIndice(indice); // Affiche l’explication
-        //     if (indice == "ZonesInnondables") {
-        //         afficherInondation("data-METEO/n_tri_s.geojson")
-        //         document.getElementById("explication-seuil").textContent = "Les territoires à risque d'inondation ne nécessitent pas de seuil, sélectionnez une infrastructure puis cliquez Afficher pour voir les infrastructures à risque";
-        //         const infra_info = getSelectedInfraInfo(); // Récupère infrastructure
-        //         const scenario_info = getSelectedScenarioInfo();
-        //         chargerInfraARisque(infra_info.fichier, scenario_info.fichier, scenario_info.annee, indice, 0)
-        //     }
-        // });
-
-
         // Affiche l'indice en fonction du scénario selectionné
         document.querySelectorAll('input[name="scenario"]').forEach(radio => {
             radio.addEventListener('change', function () {
+                document.getElementById("explicationIndice").textContent = "";
                 document.getElementById("nombreOuvrages").textContent = '';
                 document.getElementById("listeOuvrages").innerHTML = "";
                 const scenario_info = getSelectedScenarioInfo();
@@ -674,12 +694,19 @@
                 const infra_info = getSelectedInfraInfo(); // Récupère LE FICHIER infrastructure
                 const infra = document.getElementById("infraSelect").value;
                 const indice = document.getElementById("indiceSelect").value; // Recupère l'indice
+                afficherExplicationIndice(indice); // Affiche l’explication
                 const seuil = parseFloat(document.getElementById("seuilValue").value);
-                if (scenario_info) {
+                if (scenario_info && selectedIndice != "") {
                     afficherScenario(scenario_info.fichier, scenario_info.annee, selectedIndice);
                     if (selectedIndice && infra && seuil != 0) {
                         chargerInfraARisque(infra_info.fichier, scenario_info.fichier, scenario_info.annee, indice, seuil);
                     }
+                }
+                if (selectedIndice == "") { // si aucun indice n'est sélectionné
+                    console.log("Aucun indice sélectionné");
+                    // mettre en rouge le texte de l'indice
+                    document.getElementById("explicationIndice").textContent = "Veuillez sélectionner un scénario climatique";
+                    document.getElementById("explicationIndice").style.color = "red";
                 }
             });
         });
@@ -689,26 +716,33 @@
             const indice = document.getElementById("indiceSelect").value;
             afficherExplicationIndice(indice); // Affiche l’explication
             if (indice == "ZonesInnondables") {
+                legend.update();
                 if (scenarioLayerGroup) carte.removeLayer(scenarioLayerGroup);
                 afficherInondation("data-METEO/n_tri_s.geojson")
                 document.getElementById("explication-seuil").textContent = "Les territoires à risque d'inondation ne nécessitent pas de seuil, sélectionnez une infrastructure puis cliquez Afficher pour voir les infrastructures à risque";
                 const infra_info = getSelectedInfraInfo(); // Récupère infrastructure
                 const scenario_info = getSelectedScenarioInfo();
                 chargerInfraARisque(infra_info.fichier, scenario_info.fichier, scenario_info.annee, indice, 0)
+
             }
             else {
+                document.getElementById("explication-seuil").textContent = "Indiquez une valeur de seuil concernant l'indice sélectionné pour afficher les infrastructures que vous définissez à risque";
                 const info = getSelectedScenarioInfo();
                 if (inondLayer) carte.removeLayer(inondLayer);
-                if (!info) return;
+                if (!info) {
+                    console.log("Aucun scénario sélectionné");
+                    document.getElementById("explicationIndice").textContent = "Veuillez sélectionner un scénario climatique";
+                    document.getElementById("explicationIndice").style.color = "red";
+                };
                 afficherScenario(info.fichier, info.annee, indice);
                 document.getElementById("nombreOuvrages").textContent = '';
                 document.getElementById("listeOuvrages").innerHTML = "";
                 // remet à zéro le seuil
                 document.getElementById("seuilValue").value = 0;
                 // remove le pane des infra a risques
-                if (InfraLayer) {
-                    carte.removeLayer(InfraLayer);
-                    InfraLayer = null;
+                if (infraLayer) {
+                    carte.removeLayer(infraLayer);
+                    infraLayer = null;
                 }
             }
         });
@@ -718,30 +752,31 @@
             const infra = document.getElementById("infraSelect").value;
             const info = getSelectedInfraInfo();
             if (infra == "") { // A la non selection d'indice (click sur "Séléctionner")
-                // Supprime l'ancienne couche si elle existe
+                document.getElementById("nombreOuvrages").textContent = "";
+                document.getElementById("listeOuvrages").innerHTML = "";
+                console.log(infraLayer);
+
+                // Supprime l'ancienne couche si elle existe            
                 if (infraLayer) {
+                    console.log("Supprimer l'ancienne couche infraLayer");
                     carte.removeLayer(infraLayer);
                     infraLayer = null;
                 }
             }
-            if (!info) return;
-            // Supprime les infrastructures seuillées au changement de sélection d'une infrastructure
-            if (InfraLayer) {
-                carte.removeLayer(InfraLayer);
-                InfraLayer = null;
-            }
-            // Affiche es infrastructures à risque si le seuil n'est pas à 0 et qu'un indice est sélectionné
+
+            // Affiche les infrastructures à risque si le seuil n'est pas à 0 et qu'un indice est sélectionné
             const selectedIndice = document.getElementById("indiceSelect").value;
             const seuil = parseFloat(document.getElementById("seuilValue").value);
-            if (selectedIndice && infra && seuil != 0) {
+            if (selectedIndice && infra != "" && seuil != 0) {
                 const scenario_info = getSelectedScenarioInfo();
                 const indice = document.getElementById("indiceSelect").value; // Recupère l'indice
                 chargerInfraARisque(info.fichier, scenario_info.fichier, scenario_info.annee, indice, seuil);
+                document.getElementById("OuvragesArisqueDetecte").textContent = "";
             }
             else {
                 afficherInfrastructure(info.fichier)
                 document.getElementById("nombreOuvrages").textContent = '';
-                document.getElementById("listeOuvrages").innerHTML = "";
+                document.getElementById("listeOuvrages").innerHTML = ""; 
             }
         });
 
@@ -753,8 +788,9 @@
             const infra_nom = select.options[select.selectedIndex].text;// récupère le contenu et non la value 
             const indice = document.getElementById("indiceSelect").value; // Recupère l'indice
             const seuil = parseFloat(document.getElementById("seuilValue").value);
-            if (indice !== "ZonesInnondables" && (!scenario_info || !infra_info || seuil <= 0 || isNaN(seuil))) {
-                alert("Veuillez sélectionner un scénario, un type d'infrastructure et entrer un seuil valide.");
+            if (infraSelect.value == "") {
+                document.getElementById("OuvragesArisqueDetecte").style.color = "red";
+                document.getElementById("OuvragesArisqueDetecte").textContent = "Veuillez sélectionner un une infrastructure à risque";
                 return;
             }
             // Supprime l'ancienne couche si elle existe
@@ -789,6 +825,17 @@
             document.getElementById("indiceSelect").selectedIndex = 0;
         }
         document.getElementById("clearcarte").addEventListener("click", nettoyerCarte);
+
+        // Gère le bouton de la fenetre d'intro
+        document.getElementById("closeModalBtn").addEventListener("click", () => {
+            document.getElementById("modalIntro").style.display = "none";
+        });
+        // Gère le bouton d'information sur le header
+        document.getElementById("infoBtn").addEventListener("click", () => {
+            document.getElementById("modalIntro").style.display = "flex";
+        });
+
+
     </script>
 </body>
 
