@@ -109,6 +109,7 @@ header h1 {
 
 #SelectionReseau h2 {
     margin-top: 0;
+    text-align-last: center;
 }
 
 
@@ -131,6 +132,8 @@ header h1 {
 #SelectionScenarios h2, #SelectionScenarios h3 {
     margin-top: 20px;
     margin-bottom: 5px;
+        text-align-last: center;
+
 
 }
 /* === LÉGENDE === */
@@ -232,7 +235,7 @@ header h1 {
 
 
 
-/* === BOUTON NETTOYER CENTRÉ === */
+/* === BOUTON NETTOYER === */
 
 #clearcarte {
     display: block;
