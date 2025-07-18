@@ -97,6 +97,8 @@
             <option value="RRq99_yr">Pluies extrêmes (mm)</option>
             <option value="RRq99refD_yr">Fréquence pluie remarquable (j)</option>
             <option value="IFM40_yr">Feux météo (j)</option>
+            <option value="SWI04_yr">Humidité des sols (SWI04)</option>
+
 
             <!-- Texte explicatif des indices-->
         </select>
@@ -305,6 +307,7 @@
 
                 // Feu : jaune - rouge
                 "IFM40_yr": ["#f3eb6d", "#ff0000"],
+                "SWI04_yr": ["#f3eb6d", "#ff0000"],
 
                 // Inondation : GRIS
                 "ZonesInnondables": ["#413d46", "#413d46"]
@@ -324,6 +327,7 @@
                 "RRq99_yr": [15.72, 112.57],
                 "RRq99refD_yr": [2.2, 8.6],
                 "IFM40_yr": [0, 82],
+                "SWI04_yr": [0, 287], // Valeurs fictives pour l'humidité des sols, à vérifier
             };
 
             return bornes[indice] || [0, 1]; // Valeurs par défaut si indice inconnu
@@ -342,7 +346,8 @@
                 "Rx1d_yr": "Intensité des précipitations extrêmes (max annuel des précipitations totales quotidiennes (mm)",
                 "RRq99_yr": "Cumul de précipitations remarquables (percentile 99 du cumul  quotidien) (mm)",
                 "RRq99refD_yr": "Nombre de jours où les précipitations quotidiennes dépassent le 99e centile des précipitations quotidiennes de l'année.",
-                "IFM40_yr": "Nombre de jours où l'indicateur feux météo est supérieur à 40 (favorable à des départs de feu)"
+                "IFM40_yr": "Nombre de jours où l'indicateur feux météo est supérieur à 40 (favorable à des départs de feu)",
+                "SWI04_yr": "(Soil Wetness Index) Nombre de jours où SWI < 0.4, considéré comme sec", 
             };
             const texte = explications[indice] || "";
             document.getElementById("explicationIndice").textContent = texte;
@@ -409,6 +414,7 @@
                     if (id_indice == "ZonesInnondables") {
                         legend.update()
                     }
+                    
                     newLayer.addTo(carte);
                     scenarioLayerGroup = newLayer;
                 })
