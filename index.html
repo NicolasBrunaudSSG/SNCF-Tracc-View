@@ -101,8 +101,22 @@
             <option value="DebHyd">Débit hydrologique (m³/s)</option>
         </select>
 
+        <div id="probabiliteContainer" style="display: none; margin-top: 10px;">
+            <label for="probabiliteSelect">
+                <h3>Probabilité de l'innondation :</h3>
+            </label>
+            <select id="probabiliteSelect" style="width: 100%;">
+                <option value="">Sélectionner</option>
+                <option value="Forte">Forte probabilié</option>
+                <option value="Moyenne">Moyenne probabilité</option>
+                <option value="Faible">Faible probabilité</option>
+            </select>
+        </div>
+
         <div id="saisonContainer" style="display: none; margin-top: 10px;">
-            <label for="saisonSelect"><h3>Saison hydrologique :</h3></label>
+            <label for="saisonSelect">
+                <h3>Saison hydrologique :</h3>
+            </label>
             <select id="saisonSelect" style="width: 100%;">
                 <option value="">Sélectionner</option>
                 <option value="Été">Été</option>
@@ -113,13 +127,40 @@
         </div>
 
 
+
+
         <!-- Texte explicatif des indices-->
 
         <div id="explicationIndice" class="texte-explicatif"
             style="margin-top: 10px; margin-bottom: 10px;font-size: 0.9em; font-style: italic; color: #333;">
         </div>
 
+        <!-- Solution temporaire pour le croisement des données -->
+        <div id="datacrossContainer" style="display: block; margin-top: 10px;">
+            <label for="datacrossSelect">
+                <h4 id="croiseavec" style="display: none; margin-top: 0px;">Croisé avec :</h4>
+            </label>
+            <select id="datacrossSelect" style="width: 100%;">
+                <option value=""> Croiser les données </option>
+                <option value="ZonesInnondables">Zones innondables</option>
+                <option value="TXm_seas_JJA">Température maximale en été (°C)</option>
+                <option value="TMm_seas_JJA">Température moyenne en été (°C)</option>
+                <option value="TX35D_yr">Jours ≥ 35°C</option>
+                <option value="TX30D_yr">Jours ≥ 30°C</option>
+                <option value="Rx1d_yr">Max pluie extrême (mm)</option>
+                <option value="RRq99_yr">Pluies extrêmes (mm)</option>
+                <option value="RRq99refD_yr">Fréquence pluie remarquable (j)</option>
+                <option value="IFM40_yr">Feux météo (j)</option>
+                <option value="SWI04_yr">Humidité des sols (SWI04)</option>
+                <option value="DebHyd">Débit hydrologique (m³/s)</option>
+            </select>
+        </div>
 
+        <!-- Texte explicatif des 2èmes indices-->
+
+        <div id="explicationIndice2" class="texte-explicatif"
+            style="margin-top: 10px; margin-bottom: 10px;font-size: 0.9em; font-style: italic; color: #333;">
+        </div>
 
         <!-- Texte explicatif du seuil-->
         <h3 id="labelseuil">Seuil de risque </h3><span id="explication_seuil" class="texte-explicatif"
@@ -245,64 +286,155 @@
             return this._div;
         };
 
+        //     legend.update = function (props) {
+        //         if (!props) {
+        //             this._div.innerHTML = '';
+        //             return;
+        //         }
+
+        //         const { id_indice, min, max, colorMin, colorMax } = props;
+
+        //         // Sauvegarder la valeur actuelle si slider déjà présent
+        //         const existingSlider = document.getElementById("seuilSlider");
+        //         let currentValue = min;
+        //         if (existingSlider) {
+        //             currentValue = existingSlider.value;
+        //             // Optionnel : vérifie que la valeur est toujours dans la plage min/max
+        //             if (currentValue < min) currentValue = min;
+        //             if (currentValue > max) currentValue = max;
+        //         }
+
+        //         this._div.innerHTML = `
+        //     <div class="legend-bar-container">
+        //         <span class="legend-max">${max.toFixed(1)}</span>
+        //         <div class="legend-bar">
+        //             <input type="range" id="seuilSlider" min="${min}" max="${max}" step="0.1" value="${currentValue}" orient="vertical">
+        //         </div>
+        //         <span class="legend-min">${min.toFixed(1)}</span>
+        //     </div>
+        //     <div class="valeur-seuil">
+        //         <span id="valeurSlider">${currentValue}</span>
+        //     </div>
+        // `;
+
+        //         // Appliquer les couleurs au dégradé
+        //         const legendBar = this._div.querySelector(".legend-bar");
+        //         legendBar.style.background = `linear-gradient(to bottom, ${colorMax}, ${colorMin})`;
+
+
+        //         // Synchronisation slider ↔ input
+        //         const slider = document.getElementById("seuilSlider");
+
+        //         // Empêche la carte de bouger quand on clique ou glisse sur le slider
+        //         L.DomEvent.disableClickPropagation(slider);
+        //         L.DomEvent.disableScrollPropagation(slider);
+
+        //         const output = document.getElementById("valeurSlider");
+        //         const seuilInput = document.getElementById("seuilValue");
+
+        //         slider.addEventListener("input", () => {
+        //             output.textContent = slider.value;
+        //             seuilInput.value = slider.value;
+        //         });
+
+        //         seuilInput.addEventListener("input", () => {
+        //             const val = parseFloat(seuilInput.value);
+        //             if (!isNaN(val) && val >= min && val <= max) {
+        //                 slider.value = val;
+        //                 output.textContent = val;
+        //             }
+        //         });
+        //     };
+
         legend.update = function (props) {
             if (!props) {
                 this._div.innerHTML = '';
                 return;
             }
 
-            const { id_indice, min, max, colorMin, colorMax } = props;
-
-            // Sauvegarder la valeur actuelle si slider déjà présent
             const existingSlider = document.getElementById("seuilSlider");
-            let currentValue = min;
+            let currentValue = props.min ?? 0;
             if (existingSlider) {
                 currentValue = existingSlider.value;
-                // Optionnel : vérifie que la valeur est toujours dans la plage min/max
-                if (currentValue < min) currentValue = min;
-                if (currentValue > max) currentValue = max;
+                if (currentValue < props.min) currentValue = props.min;
+                if (currentValue > props.max) currentValue = props.max;
             }
 
-            this._div.innerHTML = `
-        <div class="legend-bar-container">
-            <span class="legend-max">${max.toFixed(1)}</span>
-            <div class="legend-bar">
-                <input type="range" id="seuilSlider" min="${min}" max="${max}" step="0.1" value="${currentValue}" orient="vertical">
+            // Légende classique dégradée
+            if (!props.Q1) {
+                const { min, max, colorMin, colorMax } = props;
+
+                this._div.innerHTML = `
+            <div class="legend-bar-container">
+                <span class="legend-max">${max.toFixed(1)}</span>
+                <div class="legend-bar" style="background: linear-gradient(to bottom, ${colorMax}, ${colorMin});">
+                    <input type="range" id="seuilSlider" min="${min}" max="${max}" step="0.1" value="${currentValue}" orient="vertical">
+                </div>
+                <span class="legend-min">${min.toFixed(1)}</span>
             </div>
-            <span class="legend-min">${min.toFixed(1)}</span>
-        </div>
-        <div class="valeur-seuil">
-            <span id="valeurSlider">${currentValue}</span>
-        </div>
-    `;
+            <div class="valeur-seuil">
+                <span id="valeurSlider">${currentValue}</span>
+            </div>
+        `;
+            }
 
-            // Appliquer les couleurs au dégradé
-            const legendBar = this._div.querySelector(".legend-bar");
-            legendBar.style.background = `linear-gradient(to bottom, ${colorMax}, ${colorMin})`;
+            // Légende en quartiles (4 couleurs sans dégradé)
+            else {
+                const { min, max, Q1, Q2, Q3, colorPalette } = props;
+
+                // Création d'un dégradé en 4 couleurs pleines (gradient à paliers)
+                const percentQ1 = ((Q1 - min) / (max - min)) * 100;
+                const percentQ2 = ((Q2 - min) / (max - min)) * 100;
+                const percentQ3 = ((Q3 - min) / (max - min)) * 100;
+
+                const quartileGradient = `
+                    linear-gradient(to bottom,
+                        ${colorPalette[3]} 0%, ${colorPalette[3]} ${(100 - percentQ3)}%,
+                        ${colorPalette[2]} ${(100 - percentQ3)}%, ${colorPalette[2]} ${(100 - percentQ2)}%,
+                        ${colorPalette[1]} ${(100 - percentQ2)}%, ${colorPalette[1]} ${(100 - percentQ1)}%,
+                        ${colorPalette[0]} ${(100 - percentQ1)}%, ${colorPalette[0]} 100%
+                    )
+                `;
 
 
-            // Synchronisation slider ↔ input
+                this._div.innerHTML = `
+            <div class="legend-bar-container">
+                <span class="legend-max">${max.toFixed(1)}</span>
+                <div class="legend-bar" style="background: ${quartileGradient};">
+                    <input type="range" id="seuilSlider" min="${min}" max="${max}" step="0.1" value="${currentValue}" orient="vertical">
+                </div>
+                <span class="legend-min">${min.toFixed(1)}</span>
+            </div>
+            <div class="valeur-seuil">
+                <span id="valeurSlider">${currentValue}</span>
+            </div>
+        `;
+            }
+
+            // Slider : synchro curseur ↔ valeur affichée
             const slider = document.getElementById("seuilSlider");
-
-            // Empêche la carte de bouger quand on clique ou glisse sur le slider
-            L.DomEvent.disableClickPropagation(slider);
-            L.DomEvent.disableScrollPropagation(slider);
-
             const output = document.getElementById("valeurSlider");
             const seuilInput = document.getElementById("seuilValue");
 
-            slider.addEventListener("input", () => {
-                output.textContent = slider.value;
-                seuilInput.value = slider.value;
-            });
+            if (slider && output) {
+                L.DomEvent.disableClickPropagation(slider);
+                L.DomEvent.disableScrollPropagation(slider);
 
-            seuilInput.addEventListener("input", () => {
-                const val = parseFloat(seuilInput.value);
-                if (!isNaN(val) && val >= min && val <= max) {
-                    slider.value = val;
-                    output.textContent = val;
+                slider.addEventListener("input", () => {
+                    output.textContent = slider.value;
+                    if (seuilInput) seuilInput.value = slider.value;
+                });
+
+                if (seuilInput) {
+                    seuilInput.addEventListener("input", () => {
+                        const val = parseFloat(seuilInput.value);
+                        if (!isNaN(val) && val >= props.min && val <= props.max) {
+                            slider.value = val;
+                            output.textContent = val;
+                        }
+                    });
                 }
-            });
+            }
         };
 
         legend.addTo(carte);
@@ -328,8 +460,8 @@
                 // Inondation : GRIS
                 "ZonesInnondables": ["#413d46", "#413d46"],
 
-                // Débit hydrologique : bleu ciel - violet
-                "DebHyd": ["#deebf7", "#6a51a3"]
+                // Débit hydrologique : bleu ciel - violet CHANGER COULEURS
+                "DebHyd": ["#FF0000", "#1350ED"]
             };
 
             return palettes[indice] || legend.update(); // par défaut on supprime la légende si l'indice n'est pas supporté (si c'est l'indice 'selectionner') 
@@ -347,15 +479,33 @@
                 "RRq99refD_yr": [2.2, 8.6],
                 "IFM40_yr": [0, 82],
                 "SWI04_yr": [0, 287],
-                "DebHyd": [0, 1000] // Valeurs arbitraires , a verifier
-
+                "DebHyd": [0, 1393] // Valeurs arbitraires , a verifier
             };
-
             return bornes[indice] || [0, 1]; // Valeurs par défaut si indice inconnu
         }
+        function calculerQuartiles(valeurs) {
+            const sorted = [...valeurs].sort((a, b) => a - b);
+            const n = sorted.length;
 
-        // Cette fonction affiche l'explication liée à l'indice 
-        function afficherExplicationIndice(indice) {
+            const quartile = (p) => {
+                const index = (n - 1) * p;
+                const lower = Math.floor(index);
+                const upper = Math.ceil(index);
+                const weight = index % 1;
+
+                if (upper >= n) return sorted[lower];
+                return sorted[lower] * (1 - weight) + sorted[upper] * weight;
+            };
+
+            return {
+                Q1: quartile(0.25),
+                Q2: quartile(0.5),
+                Q3: quartile(0.95)
+            };
+        }
+
+        // Cette fonction affiche l'explication liée à l'indice, la variable un_ou_deux est pour : 1-l'explication du premier indice, 2-du deuxième indice
+        function afficherExplicationIndice(indice, un_ou_deux) {
             document.getElementById("explicationIndice").style.color = "#333"; // réinitialise la couleur du texte
             const explications = {
                 "": "Veuilez sélectionner un scénario climatique",
@@ -372,7 +522,12 @@
                 "DebHyd": "Moyenne sur 30ans des moyennes par saison des débit hydrologique des stations de mesure (m³/s)"
             };
             const texte = explications[indice] || "";
-            document.getElementById("explicationIndice").textContent = texte;
+            if (un_ou_deux == 1) {
+                document.getElementById("explicationIndice").textContent = texte;
+            }
+            else {
+                document.getElementById("explicationIndice2").textContent = texte;
+            }
         }
 
         // Fonction afficherScenario d'affichage d'un scénario donné
@@ -381,159 +536,158 @@
             if (scenarioLayerGroup) {
                 carte.removeLayer(scenarioLayerGroup);
             }
-            const [couleur_min, couleur_max] = getColorPaletteForIndice(id_indice);
+            const indice2 = document.getElementById("datacrossSelect").value;
+            if (indice2 != "") {
+                croiserIndicesEtAfficher(fichierGeojson, id_indice, indice2);
+                afficherExplicationIndice(indice2, 2);
+            }
+            else {
+                const [couleur_min, couleur_max] = getColorPaletteForIndice(id_indice);
+                fetch(fichierGeojson)
+                    .then(response => response.json())
+                    .then(data => {
+                        // const features = data.features.filter(f => f.properties.Annee === annee);
+                        const features = data.features.filter(f => f.properties[id_indice] !== undefined);
+                        // Récupération des valeurs valides
+                        const valeurs = features
+                            .map(f => f.properties[id_indice])
+                            .filter(val => val !== undefined && !isNaN(val));
+
+                        // calcul du min et max
+                        const minVal = Math.min(...valeurs);
+                        const maxVal = Math.max(...valeurs);
+
+                        // calcul des quartiles pour l'indice et le scénario sélectioné
+                        const { Q1, Q2, Q3 } = calculerQuartiles(valeurs);
+
+                        // affichage dans la console
+                        console.log(`Indice : ${id_indice}`);
+                        console.log(`→ Valeur min : ${minVal}`);
+                        console.log(`→ Valeur max : ${maxVal}`);
+                        console.log(`→ Q1 : ${Q1}`);
+                        console.log(`→ Q2 : ${Q2}`);
+                        console.log(`→ Q3 : ${Q3}`);
+
+                        const [min2Val, max2Val] = getMinMaxIndice(id_indice);
+
+                        const newLayer = L.layerGroup();
+
+                        features.forEach(f => {
+                            const lat = f.geometry.coordinates[1];
+                            const lon = f.geometry.coordinates[0];
+                            const val = f.properties[id_indice];
+                            const squareCoords = getSquareAround(lat, lon, 8000); // 8km entre les stations météo
+                            // on affiche pour chacune des valeurs la couleur du quartile associé,
+                            let color;
+                            const colorminQ1 = getColor(minVal, minVal, maxVal, couleur_min, couleur_max);
+                            const colorQ1Q2 = getColor((maxVal - minVal) / 3, minVal, maxVal, couleur_min, couleur_max);
+                            const colorQ2Q3 = getColor(2 * (maxVal - minVal) / 3, minVal, maxVal, couleur_min, couleur_max);
+                            const colorQ3max = getColor(maxVal, minVal, maxVal, couleur_min, couleur_max);
+                            paletteCouleurQuartiles = [colorminQ1, colorQ1Q2, colorQ2Q3, colorQ3max];
+
+                            if (val <= Q1) color = colorminQ1; // couleur du minimum de la légende
+                            else if (val <= Q2) color = colorQ1Q2;
+                            else if (val <= Q3) color = colorQ2Q3;
+                            else color = colorQ3max;// couleur du maximum de la légende
+
+                            const poly = L.polygon(squareCoords, {
+                                color: color,
+                                fillColor: color,
+                                fillOpacity: 0.60,
+                                weight: 0,
+                                pane: 'scenarioPane'
+                            });
+                            poly.addTo(newLayer);
+                        });
+
+                        // Mise à jour de la légende
+                        legend.update({
+                            id_indice: id_indice,
+                            min: minVal,
+                            max: maxVal,
+                            colorMin: couleur_min,
+                            colorMax: couleur_max
+                        });
+                        legend.update({
+                            id_indice: id_indice,
+                            min: minVal,
+                            max: maxVal,
+                            Q1, Q2, Q3,
+                            colorPalette: paletteCouleurQuartiles
+                        });
+
+
+                        // On supprime la légende si l'indice est les TRI
+                        if (id_indice == "ZonesInnondables") {
+                            legend.update()
+                        }
+
+                        newLayer.addTo(carte);
+                        scenarioLayerGroup = newLayer;
+                    })
+                    .catch(err => {
+                        console.error("Erreur lors du chargement du fichier :", err);
+                    });
+            }
+
+        }
+
+        // Croisement des indices, pour l'instant, affiche en rouge les zones où les valeurs des deux indices sont supérieures à leur Q3
+        function croiserIndicesEtAfficher(fichierGeojson, id_indice1, id_indice2) {
+            // Supprimer la couche précédente si elle existe
+            if (scenarioLayerGroup) {
+                carte.removeLayer(scenarioLayerGroup);
+            }
+
             fetch(fichierGeojson)
                 .then(response => response.json())
                 .then(data => {
-                    // const features = data.features.filter(f => f.properties.Annee === annee);
-                    const features = data.features.filter(f => f.properties[id_indice] !== undefined);
-                    // Calcul dynamique des valeurs min et max
-                    let minVal = Infinity;
-                    let maxVal = -Infinity;
+                    const features = data.features.filter(f =>
+                        f.properties[id_indice1] !== undefined &&
+                        f.properties[id_indice2] !== undefined
+                    );
 
-                    features.forEach(f => {
-                        const val = f.properties[id_indice];
-                        if (val !== undefined && !isNaN(val)) {
-                            minVal = Math.min(minVal, val);
-                            maxVal = Math.max(maxVal, val);
-                        }
-                    });
-                    const [min2Val, max2Val] = getMinMaxIndice(id_indice);
+                    const valeurs1 = features.map(f => f.properties[id_indice1]).filter(val => !isNaN(val));
+                    const valeurs2 = features.map(f => f.properties[id_indice2]).filter(val => !isNaN(val));
 
-                    // Affichage console
-                    console.log(`Indice : ${id_indice}`);
-                    console.log(`→ Valeur min : ${minVal}`);
-                    console.log(`→ Valeur max : ${maxVal}`);
+                    const { Q3: Q3_1 } = calculerQuartiles(valeurs1);
+                    const { Q3: Q3_2 } = calculerQuartiles(valeurs2);
+
+                    console.log(`Croisement : ${id_indice1} & ${id_indice2}`);
+                    console.log(`→ Q3 ${id_indice1} : ${Q3_1}`);
+                    console.log(`→ Q3 ${id_indice2} : ${Q3_2}`);
+                    const indice1Texte = indiceSelect.options[indiceSelect.selectedIndex].text;
+                    const indice2Texte = datacrossSelect.options[datacrossSelect.selectedIndex].text;
+
+                    console.log("Ici sont affiché en rouge les zones dans lesquelles les valeurs des indices croisés sont toutes deux présentes dans le dernier quartile des données, soit les zones où "+ indice1Texte + " est supérieur à "+ Q3_1 + " ET où " + indice2Texte + " est supérieur à "+ Q3_2);
 
                     const newLayer = L.layerGroup();
 
                     features.forEach(f => {
-                        const lat = f.geometry.coordinates[1];
-                        const lon = f.geometry.coordinates[0];
-                        const val = f.properties[id_indice];
-                        const squareCoords = getSquareAround(lat, lon, 8000);
-                        const color = getColor(val, min2Val, max2Val, couleur_min, couleur_max);
+                        const val1 = f.properties[id_indice1];
+                        const val2 = f.properties[id_indice2];
 
-                        const poly = L.polygon(squareCoords, {
-                            color: color,
-                            fillColor: color,
-                            fillOpacity: 0.60,
-                            weight: 0,
-                            pane: 'scenarioPane'
-                        });
-                        poly.addTo(newLayer);
-                    });
+                        if (val1 > Q3_1 && val2 > Q3_2) {
+                            const lat = f.geometry.coordinates[1];
+                            const lon = f.geometry.coordinates[0];
+                            const squareCoords = getSquareAround(lat, lon, 8000);
 
-                    // Mise à jour de la légende
-                    legend.update({
-                        id_indice: id_indice,
-                        min: min2Val,
-                        max: max2Val,
-                        colorMin: couleur_min,
-                        colorMax: couleur_max
+                            const poly = L.polygon(squareCoords, {
+                                color: "#FF0000",
+                                fillColor: "#FF0000",
+                                fillOpacity: 0.7,
+                                weight: 0,
+                                pane: 'scenarioPane'
+                            });
+                            poly.addTo(newLayer);
+                        }
                     });
-                    // On supprime la légende si l'indice est les TRI
-                    if (id_indice == "ZonesInnondables") {
-                        legend.update()
-                    }
 
                     newLayer.addTo(carte);
                     scenarioLayerGroup = newLayer;
                 })
                 .catch(err => {
-                    console.error("Erreur lors du chargement du fichier :", err);
-                });
-        }
-
-        //Ajout du réseau ferré national Rfn
-        let LignesRfnStyle = {
-            "color": "#04354f",
-            "weight": 1.2,
-            "opacity": 0.95
-        }
-        let LignesRfn = L.geoJSON(lignesrfnJSON, {
-            style: LignesRfnStyle,
-            pane: 'reseauPane'
-        }).addTo(carte)
-
-        // Activer/Desactiver le réseau ferré national
-        // Ciblage de la checkbox
-        const lignesCheckbox = document.getElementById('checkboxLignes');
-        // Activation/désactivation de la couche
-        lignesCheckbox.addEventListener('change', (e) => {
-            if (e.target.checked) {
-                carte.addLayer(LignesRfn);
-            } else {
-                carte.removeLayer(LignesRfn);
-            }
-        });
-
-        // Affiche les infrastructures 
-        let infraLayer = null; // Couche des infrastructures
-
-        // Fonction de style pour pour les lignes (ouvrages en terre) 
-        function styleInfra(feature, estRisque = false) {
-            if (feature.geometry.type === "LineString" || feature.geometry.type === "MultiLineString") {
-                return {
-                    color: "#A52A2A",
-                    weight: estRisque ? 6 : 3,
-                    opacity: 0.5
-                };
-            }
-            return null;
-        }
-
-        // Fonction de style pour pour les points (autres infrastructures) 
-        function pointToLayerInfra(feature, latlng, estRisque = false) {
-            const value = document.getElementById("infraSelect").value;
-
-            let color;
-            if (value === "gares") color = "#0077b6"; // 
-            else if (value === "ouvrages") color = "#f67d15";
-            else if (value === "ponts_route") color = "#e43ea9";
-            else if (value === "passerelles") color = "#9008a0";
-            else color = "#0077b6";
-
-            const rayon = estRisque ? 6 : 3;
-
-            return L.circleMarker(latlng, {
-                radius: rayon,
-                fillColor: color,
-                color: color,
-                weight: 1,
-                opacity: 1,
-                fillOpacity: 0.7,
-                pane: 'infraPane'
-            });
-        }
-
-
-
-        function afficherInfrastructure(fichier) {
-            if (fichier == null) return;
-            fetch(fichier)
-                .then(res => res.json())
-                .then(data => {
-                    if (infraLayer) {
-                        carte.removeLayer(infraLayer);
-                        infraLayer = null;
-                    }
-
-                    infraLayer = L.geoJSON(data, {
-                        pane: 'infraPane',
-                        style: function (feature) {
-                            return styleInfra(feature, false);
-                        },
-                        pointToLayer: function (feature, latlng) {
-                            return pointToLayerInfra(feature, latlng, false);
-                        },
-                        onEachFeature: function (feature, layer) {
-                            if (feature.properties) {
-                                const nom = feature.properties.nom || feature.properties.libelle || "Infrastructures";
-                                layer.bindPopup(`<strong>${nom}</strong>`);
-                            }
-                        }
-                    }).addTo(carte);
+                    console.error("Erreur dans croiserIndicesEtAfficher :", err);
                 });
         }
 
@@ -620,6 +774,95 @@
                     });
                 })
                 .catch(err => console.error("Erreur affichage débit hydro :", err));
+        }
+        //Ajout du réseau ferré national Rfn
+        let LignesRfnStyle = {
+            "color": "#04354f",
+            "weight": 1.2,
+            "opacity": 0.95
+        }
+        let LignesRfn = L.geoJSON(lignesrfnJSON, {
+            style: LignesRfnStyle,
+            pane: 'reseauPane'
+        }).addTo(carte)
+
+        // Activer/Desactiver le réseau ferré national
+        // Ciblage de la checkbox
+        const lignesCheckbox = document.getElementById('checkboxLignes');
+        // Activation/désactivation de la couche
+        lignesCheckbox.addEventListener('change', (e) => {
+            if (e.target.checked) {
+                carte.addLayer(LignesRfn);
+            } else {
+                carte.removeLayer(LignesRfn);
+            }
+        });
+
+        // Affiche les infrastructures 
+        let infraLayer = null; // Couche des infrastructures
+
+        // Fonction de style pour pour les lignes (ouvrages en terre) 
+        function styleInfra(feature, estRisque = false) {
+            if (feature.geometry.type === "LineString" || feature.geometry.type === "MultiLineString") {
+                return {
+                    color: "#A52A2A",
+                    weight: estRisque ? 6 : 3,
+                    opacity: 0.5
+                };
+            }
+            return null;
+        }
+
+        // Fonction de style pour pour les points (autres infrastructures) 
+        function pointToLayerInfra(feature, latlng, estRisque = false) {
+            const value = document.getElementById("infraSelect").value;
+
+            let color;
+            if (value === "gares") color = "#0077b6"; // 
+            else if (value === "ouvrages") color = "#f67d15";
+            else if (value === "ponts_route") color = "#e43ea9";
+            else if (value === "passerelles") color = "#9008a0";
+            else color = "#0077b6";
+
+            const rayon = estRisque ? 6 : 3;
+
+            return L.circleMarker(latlng, {
+                radius: rayon,
+                fillColor: color,
+                color: color,
+                weight: 1,
+                opacity: 1,
+                fillOpacity: 0.7,
+                pane: 'infraPane'
+            });
+        }
+
+        function afficherInfrastructure(fichier) {
+            if (fichier == null) return;
+            fetch(fichier)
+                .then(res => res.json())
+                .then(data => {
+                    if (infraLayer) {
+                        carte.removeLayer(infraLayer);
+                        infraLayer = null;
+                    }
+
+                    infraLayer = L.geoJSON(data, {
+                        pane: 'infraPane',
+                        style: function (feature) {
+                            return styleInfra(feature, false);
+                        },
+                        pointToLayer: function (feature, latlng) {
+                            return pointToLayerInfra(feature, latlng, false);
+                        },
+                        onEachFeature: function (feature, layer) {
+                            if (feature.properties) {
+                                const nom = feature.properties.nom || feature.properties.libelle || "Infrastructures";
+                                layer.bindPopup(`<strong>${nom}</strong>`);
+                            }
+                        }
+                    }).addTo(carte);
+                });
         }
 
         // Cette fonction zoneARisque stocke les points à risque concernant un indice, d'une année, d'un fichier geojson, au dessus d'un seuil précisé
@@ -832,7 +1075,7 @@
                 const infra_info = getSelectedInfraInfo(); // Récupère LE FICHIER infrastructure
                 const infra = document.getElementById("infraSelect").value;
                 const indice = document.getElementById("indiceSelect").value; // Recupère l'indice
-                afficherExplicationIndice(indice); // Affiche l’explication
+                afficherExplicationIndice(indice, 1); // Affiche l’explication
                 const seuil = parseFloat(document.getElementById("seuilValue").value);
                 if (scenario_info && selectedIndice != "") {
                     if (selectedIndice == "DebHyd") {
@@ -846,8 +1089,8 @@
                         }
                         else {
                             afficherDebitHydro("data-EAU/station-debit-saison-scenario.geojson", saison, periode);
-                            console.log("Débit hydro affichés : "+saison + " - " + periode);
-                            afficherExplicationIndice("DebHyd");
+                            console.log("Débit hydro affichés : " + saison + " - " + periode);
+                            afficherExplicationIndice("DebHyd", 1);
                         }
 
                     }
@@ -870,14 +1113,28 @@
         // Affiche le scénario en fonction de l'indice sélectionné, (affiche le détail/explication de l'indice)
         document.getElementById("indiceSelect").addEventListener("change", () => {
             // Réaffiche les infos du seuil 
-            seuilContainer.style.display = "block"; 
+            seuilContainer.style.display = "block";
             labelseuil.style.display = "block";
             explication_seuil.style.display = "block";
 
             const indice = document.getElementById("indiceSelect").value;
             saisonContainer.style.display = "none"; // supprime la sélection des saisons
-            afficherExplicationIndice(indice); // Affiche l’explication
+            probabiliteContainer.style.display = "none"; // supprime la sélection des probabilité d'inondation
+            document.getElementById("datacrossSelect").selectedIndex = 0; // remet à 0 la sélection du croisement des données
+            document.getElementById("explicationIndice2").innerHTML = ""; // supprime l'explication du 2 eme indice
+            croiseavec.style.display = "none"; // supprime le "croisé avec"
+
+            afficherExplicationIndice(indice, 1); // Affiche l’explication
             if (indice == "ZonesInnondables") {
+                probabiliteContainer.style.display = "block"; // Affiche le sélecteur de probabilité des zones inondables
+                // Demnde la sélection de la probabilité
+                document.getElementById("explicationIndice").textContent = "Veuillez sélectionner une probabilité pour afficher les zones inondables";
+                document.getElementById("explicationIndice").style.color = "red";
+                // Suprrime les info de seuil 
+                seuilContainer.style.display = "none";
+                labelseuil.style.display = "none";
+                explication_seuil.style.display = "none";
+
                 legend.update();
                 document.querySelectorAll('#SelectionScenarios input[type="radio"]').forEach(cb => cb.checked = false);
                 if (scenarioLayerGroup) carte.removeLayer(scenarioLayerGroup);
@@ -892,9 +1149,9 @@
                 saisonContainer.style.display = "block"; // Affiche le sélecteur
                 // Demnde la sélection de la saison
                 document.getElementById("explicationIndice").textContent = "Veuillez sélectionner une saison pour afficher les débits hydrologiques";
-                document.getElementById("explicationIndice").style.color = "red";                
+                document.getElementById("explicationIndice").style.color = "red";
                 // Suprrime les info de seuil 
-                seuilContainer.style.display = "none"; 
+                seuilContainer.style.display = "none";
                 labelseuil.style.display = "none";
                 explication_seuil.style.display = "none";
 
@@ -913,8 +1170,8 @@
                 }
                 else {
                     afficherDebitHydro("data-EAU/station-debit-saison-scenario.geojson", saison, periode);
-                    console.log("Débit hydro affichés : "+saison + " - " + periode);
-                    afficherExplicationIndice("DebHyd");
+                    console.log("Débit hydro affichés : " + saison + " - " + periode);
+                    afficherExplicationIndice("DebHyd", 1);
                 }
 
                 // const scenario_info = getSelectedScenarioInfo(); ne sert à rien ?
@@ -952,6 +1209,37 @@
             }
         });
 
+        // au changement de sélection du sélecteur de croisement de données, affiche les données croisées
+        document.getElementById("datacrossSelect").addEventListener("change", () => {
+            // Suprrime les info de seuil 
+            seuilContainer.style.display = "none";
+            labelseuil.style.display = "none";
+            explication_seuil.style.display = "none";
+            // Ajout du "croisé avec" et de l'explication de l'indice
+            croiseavec.style.display = "block";
+
+            const indice2 = document.getElementById("datacrossSelect").value;
+            afficherExplicationIndice(indice2, 2);
+            const scenario_info = getSelectedScenarioInfo();
+            const indice1 = document.getElementById("indiceSelect").value;
+
+            if (indice2 != "") {
+                croiserIndicesEtAfficher(scenario_info.fichier, indice1, indice2);
+                afficherExplicationIndice(indice2, 2);
+
+            }
+            else {
+                // Réaffiche les info de seuil 
+                seuilContainer.style.display = "block";
+                labelseuil.style.display = "block";
+                explication_seuil.style.display = "block";
+                afficherScenario(scenario_info.fichier, scenario_info.annee, indice1)
+                croiseavec.style.display = "none"; // enlever le "croisé avec"
+                document.getElementById("explicationIndice2").innerHTML = "";
+
+            }
+        });
+
         // affiche au changement de sélection des saisons les débits hydrologiques
         document.getElementById("saisonSelect").addEventListener("change", () => {
             const scenario = document.querySelector('input[name="scenario"]:checked');
@@ -962,23 +1250,23 @@
                 return;
             }
             else {
-                if(scenario == null) {
+                if (scenario == null) {
                     document.getElementById("explicationIndice").textContent = "Veuillez sélectionner un scénario climatique";
                     document.getElementById("explicationIndice").style.color = "red";
                     return;
                 }
                 else {
-                    afficherExplicationIndice("DebHyd");
+                    afficherExplicationIndice("DebHyd", 1);
                     const periode = scenario.value;
                     afficherDebitHydro("data-EAU/station-debit-saison-scenario.geojson", saison, periode);
                     console.log("Débit hydro affichés : " + saison + " - " + periode);
-                    afficherExplicationIndice("DebHyd");
+                    afficherExplicationIndice("DebHyd", 1);
                 }
             }
         });
 
         // Affiche les infrastructures sélectionnées depuis la rubrique Réseau
-        document.getElementById("infraSelect").addEventListener("change", () => {
+        document.getElementById("infraSelect").addEventListener("click", () => {
             const infra = document.getElementById("infraSelect").value;
             const info = getSelectedInfraInfo();
             if (infra == "") { // A la non selection d'indice (click sur "Séléctionner")
@@ -1052,13 +1340,17 @@
             document.getElementById("nombreOuvrages").textContent = '';
             document.getElementById("listeOuvrages").innerHTML = "";
             document.getElementById("explicationIndice").innerHTML = "";
+            document.getElementById("explicationIndice2").innerHTML = "";
+            croiseavec.style.display = "none";
             document.querySelectorAll('#SelectionReseau input[type="checkbox"]').forEach(cb => cb.checked = false);
             document.querySelectorAll('#SelectionScenarios input[type="radio"]').forEach(cb => cb.checked = false);
             document.getElementById("infraSelect").selectedIndex = 0;
             document.getElementById("indiceSelect").selectedIndex = 0;
             document.getElementById("saisonSelect").selectedIndex = 0;
+            document.getElementById("datacrossSelect").selectedIndex = 0;
 
-            //Supprime la sélection de sainson
+
+            //Supprime la sélection de saison
             saisonContainer.style.display = "none"; // Affiche le sélecteur
             // Réaffiche les infos du seuil si supprimés
             seuilContainer.style.display = "block";

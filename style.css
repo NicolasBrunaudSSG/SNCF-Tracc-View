@@ -129,7 +129,7 @@ header h1 {
     z-index: 998;
 }
 
-#SelectionScenarios h2, #SelectionScenarios h3 {
+#SelectionScenarios h2, #SelectionScenarios h3, #SelectionScenarios h4 {
     margin-top: 20px;
     margin-bottom: 5px;
         text-align-last: center;
@@ -140,7 +140,7 @@ header h1 {
 
 .custom-legend {
     position: absolute;
-    bottom: 20px;
+    bottom: 40px;
     right: 310px;
     background: rgba(255, 255, 255, 0.95);
     padding: 10px 15px;
