@@ -130,8 +130,8 @@ header h1 {
 }
 
 #SelectionScenarios h2, #SelectionScenarios h3, #SelectionScenarios h4 {
-    margin-top: 20px;
-    margin-bottom: 5px;
+    margin-top: 5px;
+    margin-bottom: 2px;
         text-align-last: center;
 
 
@@ -143,7 +143,7 @@ header h1 {
     bottom: 40px;
     right: 310px;
     background: rgba(255, 255, 255, 0.95);
-    padding: 10px 15px;
+    padding: 10px 20px;
     border-radius: 10px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
     font-size: 0.9rem;
@@ -192,7 +192,7 @@ header h1 {
     -webkit-appearance: none;
     appearance: none;
     width: 22px;          /* largeur du rectangle */
-    height: 15px ;         /* hauteur du rectangle */
+    height: 8px ;         /* hauteur du rectangle */
     background: rgba(115, 112, 112, 0.573);    /* couleur blanche */
     border-radius: 5px;   /* coins arrondis */
     border: 3px solid rgb(105, 105, 105);
@@ -218,6 +218,37 @@ header h1 {
     background: transparent;
 }
 
+.quartile-line {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    background: white;
+    pointer-events: none;
+}
+
+.quartile-label {
+    position: absolute;
+    left: 105%;  /* juste à droite de la légende */
+    transform: translateY(-50%);
+    font-size: 10px;
+    color: rgb(23, 12, 12);
+    white-space: nowrap;
+    pointer-events: none;
+}
+
+.quartile-noms {
+    position: absolute;
+    left: -20px;
+    transform: translateY(-50%);
+    font-size: 10px;
+    color: rgb(23, 12, 12);
+    white-space: nowrap;
+
+}
+
+
+
 .legend-max, .legend-min {
     font-size: 0.85em;
     font-weight: bold;
@@ -236,14 +267,21 @@ header h1 {
 
 
 /* === BOUTON NETTOYER === */
-
+#top-actions {
+    position: absolute;
+    top: 10px;
+    left: calc(44% + 275px); /* décale à droite du header */
+    transform: translateX(-45%);
+    z-index: 998; /* juste sous le header s'il se chevauchait */
+}
 #clearcarte {
     display: block;
-    margin: 5px auto;
-    padding: 12px 20px;
+    margin: 0px auto;
+    padding: 12px 30px;
     font-size: 1rem;
+    font-weight: bold;
     border-radius: 10px;
-    border: none;
+    border: rgba(17, 75, 95, 0.9);
     background-color: #F0F0F0;
     color: #000000;
     cursor: pointer;
@@ -265,7 +303,7 @@ input[type="checkbox"], input[type="radio"] {
 label {
     display: block;
     align-items: flex-start;
-    margin-bottom: 12px;
+    margin-bottom: 10px;
     font-weight: 500;
     font-size: 1rem;
     flex-direction: column;
@@ -282,7 +320,7 @@ label {
 
 select {
     width: 100%;
-    padding: 10px;
+    padding: 5px;
     font-size: 1rem;
     border: 1px solid #ccc;
     border-radius: 8px;
@@ -318,8 +356,8 @@ select {
 /* === BOUTONS === */
 
 button {
-    padding: 12px 20px;
-    margin: 8px 0;
+    padding: 10px 20px;
+    margin: 8px 0px;
     font-size: 1rem;
     border-radius: 10px;
     border: none;
@@ -330,6 +368,18 @@ button {
 
 button:hover {
     opacity: 0.85;
+}
+
+#actualiserQuantile0Btn
+{
+    padding: 0px 0px;
+    /* margin: 8px 0px;
+    font-size: 1rem;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+    transition: all 0.3s ease; */
 }
 
 /* === SCROLL PANELS === */
