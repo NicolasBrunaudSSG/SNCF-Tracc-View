@@ -347,7 +347,7 @@ select {
     margin-top: 8px;
 }
 
-#listeOuvrages li {
+#listeOuvrages li { 
     padding: 4px 0;
     font-size: 0.9rem;
 }
