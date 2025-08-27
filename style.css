@@ -93,6 +93,24 @@ header h1 {
 
 }
 
+#explication_croisement {
+    position: absolute;
+    bottom: 10px;               /* Espace depuis le bas */
+    left: 40%;                  /* Centré horizontalement */
+    transform: translateX(-50%);
+    background: #ccccccc0;  /* Gris clair transparent */
+    color: rgb(23, 12, 12);
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-size: 0.8em;
+    font-weight: bold;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    z-index: 1000;              /* Au-dessus de la carte */
+    pointer-events: none;       /* Ne bloque pas les interactions avec la carte */
+    max-width: 90%;
+    text-align: center;
+}
+
 /* === PANNEAU GAUCHE === */
 
 #SelectionReseau {
