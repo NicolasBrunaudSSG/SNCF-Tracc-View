@@ -25,6 +25,7 @@
             </span>
         </h1>
     </header>
+
     <div id="top-actions" style="width:230px; margin-bottom: 20px;"> <button id="clearcarte">Nettoyer la carte</button>
     </div>
 
@@ -1136,6 +1137,7 @@
                 document.getElementById("explicationIndice").textContent = "";
                 document.getElementById("nombreOuvrages").textContent = '';
                 document.getElementById("listeOuvrages").innerHTML = "";
+                document.getElementById("OuvragesArisqueDetecte").textContent = "";
                 const scenario_info = getSelectedScenarioInfo();
                 const selectedIndice = document.getElementById("indiceSelect").value;
                 const infra_info = getSelectedInfraInfo(); // Récupère LE FICHIER infrastructure
@@ -1273,6 +1275,7 @@
                 afficherScenario(info.fichier, info.annee, indice);
                 document.getElementById("nombreOuvrages").textContent = '';
                 document.getElementById("listeOuvrages").innerHTML = "";
+                document.getElementById("OuvragesArisqueDetecte").textContent = "";
                 // remet à zéro le seuil
                 document.getElementById("seuilValue").value = 0;
                 // remove le pane des infra a risques
@@ -1517,6 +1520,7 @@
             document.getElementById("explicationIndice").innerHTML = "";
             document.getElementById("explicationIndice2").innerHTML = "";
             croiseavec.style.display = "none";
+            explication_croisement.style.display = "none"; // enlever l'explication du croisement
             // probabiliteContainer.style.display = "none";
             quantileControl.style.display = "none";
             document.querySelectorAll('#SelectionReseau input[type="checkbox"]').forEach(cb => cb.checked = false);
